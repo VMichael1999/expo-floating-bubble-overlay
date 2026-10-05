@@ -1,120 +1,120 @@
 import { Platform } from 'react-native';
 
-type Fachada = typeof import('../index').BurbujaFlotante;
+type Facade = typeof import('../index').FloatingBubble;
 
-function nativoFalso() {
+function fakeNative() {
   return {
-    tienePermiso: jest.fn(() => true),
-    abrirAjustesPermiso: jest.fn(),
-    mostrar: jest.fn(() => true),
-    mantenerActiva: jest.fn(),
-    soltarActiva: jest.fn(),
-    ocultar: jest.fn(),
-    abrirApp: jest.fn(() => true),
-    programarApertura: jest.fn(),
-    cancelarApertura: jest.fn(),
-    estaVisible: jest.fn(() => true),
+    hasOverlayPermission: jest.fn(() => true),
+    openOverlayPermissionSettings: jest.fn(),
+    show: jest.fn(() => true),
+    startKeepAlive: jest.fn(),
+    stopKeepAlive: jest.fn(),
+    hide: jest.fn(),
+    bringAppToForeground: jest.fn(() => true),
+    scheduleBringAppToForeground: jest.fn(),
+    cancelScheduledBringAppToForeground: jest.fn(),
+    isVisible: jest.fn(() => true),
     addListener: jest.fn(() => ({ remove: jest.fn() })),
   };
 }
 
-/** Carga la fachada con la plataforma y el modulo nativo indicados. */
-function cargar(os: typeof Platform.OS, nativo: ReturnType<typeof nativoFalso> | null): Fachada {
-  let fachada!: Fachada;
+/** Loads the facade with the given platform and native module. */
+function load(os: typeof Platform.OS, native: ReturnType<typeof fakeNative> | null): Facade {
+  let facade!: Facade;
   jest.isolateModules(() => {
     jest.doMock('expo', () => ({
       ...jest.requireActual('expo'),
-      requireOptionalNativeModule: jest.fn(() => nativo),
+      requireOptionalNativeModule: jest.fn(() => native),
     }));
     require('react-native').Platform.OS = os;
-    fachada = require('../index').BurbujaFlotante;
+    facade = require('../index').FloatingBubble;
   });
-  return fachada;
+  return facade;
 }
 
-const osOriginal = Platform.OS;
+const originalOS = Platform.OS;
 
 afterEach(() => {
   jest.dontMock('expo');
-  Platform.OS = osOriginal;
+  Platform.OS = originalOS;
 });
 
-describe('BurbujaFlotante sin modulo nativo', () => {
-  it.each(['ios', 'web'] as const)('en %s es un no-op seguro', (os) => {
-    const nativo = nativoFalso();
-    const b = cargar(os, nativo);
+describe('FloatingBubble without a native module', () => {
+  it.each(['ios', 'web'] as const)('is a safe no-op on %s', (os) => {
+    const native = fakeNative();
+    const b = load(os, native);
 
-    expect(b.disponible).toBe(false);
-    expect(b.tienePermiso()).toBe(false);
-    expect(b.mostrar()).toBe(false);
-    expect(b.abrirApp()).toBe(false);
-    expect(b.estaVisible()).toBe(false);
+    expect(b.isAvailable).toBe(false);
+    expect(b.hasOverlayPermission()).toBe(false);
+    expect(b.show()).toBe(false);
+    expect(b.bringAppToForeground()).toBe(false);
+    expect(b.isVisible()).toBe(false);
     expect(() => {
-      b.ocultar();
-      b.abrirAjustesPermiso();
-      b.mantenerActiva();
-      b.soltarActiva();
-      b.programarApertura(4);
-      b.cancelarApertura();
+      b.hide();
+      b.openOverlayPermissionSettings();
+      b.startKeepAlive();
+      b.stopKeepAlive();
+      b.scheduleBringAppToForeground(4);
+      b.cancelScheduledBringAppToForeground();
     }).not.toThrow();
-    expect(b.alTocar(jest.fn()).remove).toEqual(expect.any(Function));
-    expect(nativo.mostrar).not.toHaveBeenCalled();
+    expect(b.addPressListener(jest.fn()).remove).toEqual(expect.any(Function));
+    expect(native.show).not.toHaveBeenCalled();
   });
 
-  it('en Android sin development build (Expo Go) es un no-op seguro', () => {
-    const b = cargar('android', null);
+  it('is a safe no-op on Android without a development build (Expo Go)', () => {
+    const b = load('android', null);
 
-    expect(b.disponible).toBe(false);
-    expect(b.mostrar({ tamano: 60 })).toBe(false);
-    expect(() => b.alCerrar(jest.fn()).remove()).not.toThrow();
+    expect(b.isAvailable).toBe(false);
+    expect(b.show({ size: 60 })).toBe(false);
+    expect(() => b.addDismissListener(jest.fn()).remove()).not.toThrow();
   });
 });
 
-describe('BurbujaFlotante en Android', () => {
-  it('delega cada llamada en el modulo nativo', () => {
-    const nativo = nativoFalso();
-    const b = cargar('android', nativo);
-    const opciones = { tamano: 72, tituloNotificacion: 'Viaje en curso' };
+describe('FloatingBubble on Android', () => {
+  it('delegates every call to the native module', () => {
+    const native = fakeNative();
+    const b = load('android', native);
+    const options = { size: 72, notificationTitle: 'Bubble active' };
 
-    expect(b.disponible).toBe(true);
-    expect(b.tienePermiso()).toBe(true);
-    expect(b.mostrar(opciones)).toBe(true);
-    expect(nativo.mostrar).toHaveBeenCalledWith(opciones);
-    expect(b.abrirApp()).toBe(true);
-    expect(b.estaVisible()).toBe(true);
+    expect(b.isAvailable).toBe(true);
+    expect(b.hasOverlayPermission()).toBe(true);
+    expect(b.show(options)).toBe(true);
+    expect(native.show).toHaveBeenCalledWith(options);
+    expect(b.bringAppToForeground()).toBe(true);
+    expect(b.isVisible()).toBe(true);
 
-    b.ocultar();
-    b.abrirAjustesPermiso();
-    b.mantenerActiva(opciones);
-    b.soltarActiva();
-    b.programarApertura(4);
-    b.cancelarApertura();
+    b.hide();
+    b.openOverlayPermissionSettings();
+    b.startKeepAlive(options);
+    b.stopKeepAlive();
+    b.scheduleBringAppToForeground(4);
+    b.cancelScheduledBringAppToForeground();
 
-    expect(nativo.ocultar).toHaveBeenCalled();
-    expect(nativo.abrirAjustesPermiso).toHaveBeenCalled();
-    expect(nativo.mantenerActiva).toHaveBeenCalledWith(opciones);
-    expect(nativo.soltarActiva).toHaveBeenCalled();
-    expect(nativo.programarApertura).toHaveBeenCalledWith(4);
-    expect(nativo.cancelarApertura).toHaveBeenCalled();
+    expect(native.hide).toHaveBeenCalled();
+    expect(native.openOverlayPermissionSettings).toHaveBeenCalled();
+    expect(native.startKeepAlive).toHaveBeenCalledWith(options);
+    expect(native.stopKeepAlive).toHaveBeenCalled();
+    expect(native.scheduleBringAppToForeground).toHaveBeenCalledWith(4);
+    expect(native.cancelScheduledBringAppToForeground).toHaveBeenCalled();
   });
 
-  it('mostrar sin opciones envia un objeto vacio', () => {
-    const nativo = nativoFalso();
-    cargar('android', nativo).mostrar();
+  it('show without options sends an empty object', () => {
+    const native = fakeNative();
+    load('android', native).show();
 
-    expect(nativo.mostrar).toHaveBeenCalledWith({});
+    expect(native.show).toHaveBeenCalledWith({});
   });
 
-  it('suscribe los eventos onTocar y onCerrar', () => {
-    const nativo = nativoFalso();
-    const b = cargar('android', nativo);
-    const alTocar = jest.fn();
-    const alCerrar = jest.fn();
+  it('subscribes to the onPress and onDismiss events', () => {
+    const native = fakeNative();
+    const b = load('android', native);
+    const onPress = jest.fn();
+    const onDismiss = jest.fn();
 
-    b.alTocar(alTocar);
-    b.alCerrar(alCerrar);
+    b.addPressListener(onPress);
+    b.addDismissListener(onDismiss);
 
-    expect(nativo.addListener).toHaveBeenCalledWith('onTocar', alTocar);
-    expect(nativo.addListener).toHaveBeenCalledWith('onCerrar', alCerrar);
+    expect(native.addListener).toHaveBeenCalledWith('onPress', onPress);
+    expect(native.addListener).toHaveBeenCalledWith('onDismiss', onDismiss);
   });
 });

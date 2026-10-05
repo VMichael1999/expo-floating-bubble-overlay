@@ -1,26 +1,26 @@
-/** Opciones de la burbuja (todas opcionales). Tamaños y posiciones en dp. */
-export interface OpcionesBurbuja {
-  /** Diámetro, de 40 a 96. Por defecto 60. */
-  tamano?: number;
-  /** De 0.2 a 1. Por defecto 1. */
-  opacidad?: number;
-  /** Nombre de un drawable/mipmap nativo; por defecto el ícono de la app. */
-  icono?: string;
-  /** Qué tan cerca de la X hay que soltarla para cerrarla. Por defecto 96. */
-  distanciaCerrar?: number;
-  /** Al soltarla se pega al borde lateral más cercano. Por defecto true. */
-  pegarAlBorde?: boolean;
-  /** Posición inicial; por defecto borde derecho, a un tercio de la altura. */
+/** Bubble options (all optional). Sizes and positions in dp. */
+export interface BubbleOptions {
+  /** Diameter, from 40 to 96. Defaults to 60. */
+  size?: number;
+  /** From 0.2 to 1. Defaults to 1. */
+  opacity?: number;
+  /** Name of a native drawable/mipmap; defaults to the app icon. */
+  icon?: string;
+  /** How close to the X the bubble must be released to dismiss it. Defaults to 96. */
+  dismissDistance?: number;
+  /** On release the bubble snaps to the nearest side edge. Defaults to true. */
+  snapToEdge?: boolean;
+  /** Initial position; defaults to the right edge, a third of the way down. */
   x?: number;
   y?: number;
-  /** Notificación del servicio que mantiene viva la app mientras se ve la burbuja. */
-  tituloNotificacion?: string;
-  textoNotificacion?: string;
+  /** Notification of the foreground service that keeps the app alive while the bubble shows. */
+  notificationTitle?: string;
+  notificationText?: string;
 }
 
-export type Eventos = {
-  /** Se tocó la burbuja: la app ya se está abriendo y la burbuja se ocultó. */
-  onTocar: () => void;
-  /** El usuario la arrastró a la X. */
-  onCerrar: () => void;
+export type FloatingBubbleEvents = {
+  /** The bubble was tapped: the app is already coming to the foreground and the bubble is hidden. */
+  onPress: () => void;
+  /** The user dragged the bubble onto the X. */
+  onDismiss: () => void;
 };

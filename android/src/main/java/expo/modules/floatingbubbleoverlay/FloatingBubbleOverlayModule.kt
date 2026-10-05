@@ -5,65 +5,65 @@ import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
-/** Puente con JS. La logica esta en [BurbujaManager]. */
+/** Bridge with JS. The logic lives in [BubbleController]. */
 class FloatingBubbleOverlayModule : Module() {
-  private val contexto: Context
+  private val context: Context
     get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
 
   override fun definition() = ModuleDefinition {
     Name("FloatingBubbleOverlay")
 
-    Events("onTocar", "onCerrar")
+    Events("onPress", "onDismiss")
 
     OnCreate {
-      BurbujaManager.oyente = object : BurbujaManager.Oyente {
-        override fun alTocar() = sendEvent("onTocar", emptyMap<String, Any?>())
-        override fun alCerrar() = sendEvent("onCerrar", emptyMap<String, Any?>())
+      BubbleController.listener = object : BubbleController.Listener {
+        override fun onPress() = sendEvent("onPress", emptyMap<String, Any?>())
+        override fun onDismiss() = sendEvent("onDismiss", emptyMap<String, Any?>())
       }
     }
 
     OnDestroy {
-      BurbujaManager.oyente = null
+      BubbleController.listener = null
     }
 
-    Function("tienePermiso") {
-      BurbujaManager.tienePermiso(contexto)
+    Function("hasOverlayPermission") {
+      BubbleController.hasOverlayPermission(context)
     }
 
-    Function("abrirAjustesPermiso") {
-      BurbujaManager.abrirAjustesPermiso(contexto)
+    Function("openOverlayPermissionSettings") {
+      BubbleController.openOverlayPermissionSettings(context)
     }
 
-    Function("mostrar") { opciones: Map<String, Any?> ->
-      BurbujaManager.mostrar(contexto, BurbujaOpciones.desdeMapa(opciones))
+    Function("show") { options: Map<String, Any?> ->
+      BubbleController.show(context, BubbleOptions.fromMap(options))
     }
 
-    Function("mantenerActiva") { opciones: Map<String, Any?> ->
-      BurbujaManager.mantenerActiva(contexto, BurbujaOpciones.desdeMapa(opciones))
+    Function("startKeepAlive") { options: Map<String, Any?> ->
+      BubbleController.startKeepAlive(context, BubbleOptions.fromMap(options))
     }
 
-    Function("soltarActiva") {
-      BurbujaManager.soltarActiva(contexto)
+    Function("stopKeepAlive") {
+      BubbleController.stopKeepAlive(context)
     }
 
-    Function("ocultar") {
-      BurbujaManager.ocultar(contexto)
+    Function("hide") {
+      BubbleController.hide(context)
     }
 
-    Function("abrirApp") {
-      BurbujaManager.abrirApp(contexto)
+    Function("bringAppToForeground") {
+      BubbleController.bringAppToForeground(context)
     }
 
-    Function("programarApertura") { segundos: Int ->
-      BurbujaManager.programarApertura(contexto, segundos)
+    Function("scheduleBringAppToForeground") { seconds: Int ->
+      BubbleController.scheduleBringAppToForeground(context, seconds)
     }
 
-    Function("cancelarApertura") {
-      BurbujaManager.cancelarApertura()
+    Function("cancelScheduledBringAppToForeground") {
+      BubbleController.cancelScheduledBringAppToForeground()
     }
 
-    Function("estaVisible") {
-      BurbujaManager.visible
+    Function("isVisible") {
+      BubbleController.isVisible
     }
   }
 }

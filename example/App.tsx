@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react';
-import { BurbujaFlotante } from 'expo-floating-bubble-overlay';
+import { FloatingBubble } from 'expo-floating-bubble-overlay';
 import { AppState, Button, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 export default function App() {
-  const [permiso, setPermiso] = useState(BurbujaFlotante.tienePermiso());
-  const [ultimoEvento, setUltimoEvento] = useState('—');
+  const [hasPermission, setHasPermission] = useState(FloatingBubble.hasOverlayPermission());
+  const [lastEvent, setLastEvent] = useState('—');
 
   useEffect(() => {
-    const tocar = BurbujaFlotante.alTocar(() => setUltimoEvento('onTocar'));
-    const cerrar = BurbujaFlotante.alCerrar(() => setUltimoEvento('onCerrar'));
-    // Al volver de Ajustes se relee el permiso
-    const estado = AppState.addEventListener('change', (s) => {
-      if (s === 'active') setPermiso(BurbujaFlotante.tienePermiso());
+    const press = FloatingBubble.addPressListener(() => setLastEvent('onPress'));
+    const dismiss = FloatingBubble.addDismissListener(() => setLastEvent('onDismiss'));
+    // Re-read the permission when coming back from Settings
+    const appState = AppState.addEventListener('change', (s) => {
+      if (s === 'active') setHasPermission(FloatingBubble.hasOverlayPermission());
     });
     return () => {
-      tocar.remove();
-      cerrar.remove();
-      estado.remove();
+      press.remove();
+      dismiss.remove();
+      appState.remove();
     };
   }, []);
 
@@ -24,18 +24,21 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
         <Text style={styles.header}>Floating bubble</Text>
-        <Group name="Estado">
-          <Text>Disponible: {String(BurbujaFlotante.disponible)}</Text>
-          <Text>Permiso: {String(permiso)}</Text>
-          <Text>Último evento: {ultimoEvento}</Text>
+        <Group name="State">
+          <Text>Available: {String(FloatingBubble.isAvailable)}</Text>
+          <Text>Permission: {String(hasPermission)}</Text>
+          <Text>Last event: {lastEvent}</Text>
         </Group>
-        <Group name="Acciones">
-          <Button title="Abrir ajustes del permiso" onPress={BurbujaFlotante.abrirAjustesPermiso} />
+        <Group name="Actions">
           <Button
-            title="Mostrar burbuja (sal de la app para verla)"
-            onPress={() => BurbujaFlotante.mostrar({ tituloNotificacion: 'Burbuja activa' })}
+            title="Open permission settings"
+            onPress={FloatingBubble.openOverlayPermissionSettings}
           />
-          <Button title="Ocultar burbuja" onPress={BurbujaFlotante.ocultar} />
+          <Button
+            title="Show bubble (leave the app to see it)"
+            onPress={() => FloatingBubble.show({ notificationTitle: 'Bubble active' })}
+          />
+          <Button title="Hide bubble" onPress={FloatingBubble.hide} />
         </Group>
       </ScrollView>
     </SafeAreaView>
