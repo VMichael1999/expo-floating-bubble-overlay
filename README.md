@@ -1,5 +1,7 @@
 # expo-floating-bubble-overlay
 
+🌐 **English** | [Español](README.es.md)
+
 A floating "chat head" bubble for **Android** that draws over other apps and brings your Expo / React Native app back to the foreground with one tap.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
