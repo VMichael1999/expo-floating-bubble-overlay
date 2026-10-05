@@ -39,6 +39,8 @@ data class BubbleOptions(
   val notificationText: String? = null,
   /** When the bubble is on screen while enabled. */
   val showWhen: ShowWhen = ShowWhen.BACKGROUND,
+  /** Tapping the bubble hides it until the app next goes to the background. */
+  val hideOnPress: Boolean = true,
 ) {
   companion object {
     fun fromMap(m: Map<String, Any?>): BubbleOptions {
@@ -54,6 +56,7 @@ data class BubbleOptions(
         notificationTitle = m["notificationTitle"] as? String,
         notificationText = m["notificationText"] as? String,
         showWhen = ShowWhen.fromJs(m["showWhen"]),
+        hideOnPress = m["hideOnPress"] as? Boolean ?: true,
       )
     }
   }

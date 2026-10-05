@@ -11,6 +11,7 @@ export default function App() {
   const [enabled, setEnabled] = useState(FloatingBubble.isEnabled());
   const [showWhen, setShowWhen] = useState<ShowWhen>('background');
   const [customIcon, setCustomIcon] = useState(false);
+  const [hideOnPress, setHideOnPress] = useState(true);
   const [lastEvent, setLastEvent] = useState('—');
 
   useEffect(() => {
@@ -32,8 +33,9 @@ export default function App() {
   }, []);
 
   // Without `icon` the bubble shows the app icon
-  const options = (mode: ShowWhen, custom: boolean): BubbleOptions => ({
+  const options = (mode: ShowWhen, custom: boolean, hide = hideOnPress): BubbleOptions => ({
     showWhen: mode,
+    hideOnPress: hide,
     notificationTitle: 'Bubble active',
     ...(custom ? { icon: CUSTOM_ICON } : {}),
   });
@@ -63,6 +65,11 @@ export default function App() {
     if (enabled) FloatingBubble.enable(options(showWhen, custom));
   };
 
+  const changeHideOnPress = (hide: boolean) => {
+    setHideOnPress(hide);
+    if (enabled) FloatingBubble.enable(options(showWhen, customIcon, hide));
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
@@ -75,6 +82,10 @@ export default function App() {
           <View style={styles.row}>
             <Text>Custom icon (off = app icon)</Text>
             <Switch value={customIcon} onValueChange={changeIcon} />
+          </View>
+          <View style={styles.row}>
+            <Text>Hide on tap</Text>
+            <Switch value={hideOnPress} onValueChange={changeHideOnPress} />
           </View>
           <Text>Show when:</Text>
           {MODES.map((mode) => (

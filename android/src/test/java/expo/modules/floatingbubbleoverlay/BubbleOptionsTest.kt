@@ -21,9 +21,10 @@ class BubbleOptionsTest {
         "notificationTitle" to "Title",
         "notificationText" to "Text",
         "showWhen" to "always",
+        "hideOnPress" to false,
       ),
     )
-    assertEquals(BubbleOptions(72, 0.5f, "ic_bubble", 120, false, 10, 20, "Title", "Text", ShowWhen.ALWAYS), o)
+    assertEquals(BubbleOptions(72, 0.5f, "ic_bubble", 120, false, 10, 20, "Title", "Text", ShowWhen.ALWAYS, false), o)
   }
 
   @Test
@@ -42,6 +43,7 @@ class BubbleOptionsTest {
   @Test
   fun emptyMapUsesTheDefaults() {
     assertEquals(BubbleOptions(), BubbleOptions.fromMap(emptyMap()))
+    assertTrue("a tap hides the bubble by default", BubbleOptions().hideOnPress)
   }
 
   @Test

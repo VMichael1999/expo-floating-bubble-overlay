@@ -213,20 +213,65 @@ class BubbleControllerTest {
     assertEquals(((80 + 16) * d).toInt(), (views()[0].layoutParams as WindowManager.LayoutParams).width)
   }
 
-  @Test
-  fun tapInBackgroundBringsTheAppBackAndKeepsTheBubbleEnabled() {
-    BubbleController.enable(app, BubbleOptions())
-    advance()
-    val v = views()[0]
+  private fun tap(v: View) {
     touch(v, MotionEvent.ACTION_DOWN, 30f, 30f)
     touch(v, MotionEvent.ACTION_UP, 30f, 30f)
     advance()
+  }
+
+  @Test
+  fun byDefaultATapInBackgroundOpensTheAppAndHidesTheBubble() {
+    BubbleController.enable(app, BubbleOptions())
+    advance()
+    tap(views()[0])
     val started = shadowOf(app).nextStartedActivity
     assertNotNull("must open the app", started)
     assertEquals("MainActivity", started.component?.className)
     assertTrue(started.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
     assertEquals(1, presses)
-    assertTrue(BubbleController.isEnabled)
+    assertTrue("hidden right away", views().isEmpty())
+    assertTrue("but still enabled", BubbleController.isEnabled)
+  }
+
+  @Test
+  fun aBubbleHiddenByATapComesBackTheNextTimeTheAppGoesToBackground() {
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS))
+    advance()
+    tap(views()[0])
+    assertTrue(views().isEmpty())
+
+    val activity = appActivity().start() // the app opens
+    advance()
+    assertTrue("stays hidden inside the app", views().isEmpty())
+
+    activity.stop() // the user leaves again
+    advance()
+    assertEquals("comes back", 1, views().size)
+  }
+
+  @Test
+  fun withHideOnPressFalseTheBubbleStaysAfterATap() {
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS, hideOnPress = false))
+    advance()
+    tap(views()[0])
+    assertEquals(1, presses)
+    assertEquals(1, views().size)
+
+    appActivity().start()
+    advance()
+    assertEquals("still there inside the app", 1, views().size)
+  }
+
+  @Test
+  fun enablingAgainShowsABubbleHiddenByATap() {
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS))
+    advance()
+    tap(views()[0])
+    assertTrue(views().isEmpty())
+
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS))
+    advance()
+    assertEquals(1, views().size)
   }
 
   @Test
@@ -235,12 +280,10 @@ class BubbleControllerTest {
     importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
     BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS))
     advance()
-    val v = views()[0]
-    touch(v, MotionEvent.ACTION_DOWN, 30f, 30f)
-    touch(v, MotionEvent.ACTION_UP, 30f, 30f)
-    advance()
+    tap(views()[0])
     assertEquals(null, shadowOf(app).nextStartedActivity)
     assertEquals(1, presses)
+    assertTrue("hidden by default, the app is already open", views().isEmpty())
   }
 
   @Test

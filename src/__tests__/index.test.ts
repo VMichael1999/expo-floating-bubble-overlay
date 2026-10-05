@@ -90,7 +90,12 @@ describe('FloatingBubble on Android', () => {
   it('delegates every call to the native module', () => {
     const native = fakeNative();
     const b = load('android', native);
-    const options = { size: 72, notificationTitle: 'Bubble active', showWhen: 'always' as const };
+    const options = {
+      size: 72,
+      notificationTitle: 'Bubble active',
+      showWhen: 'always' as const,
+      hideOnPress: false,
+    };
 
     expect(b.isAvailable).toBe(true);
     expect(b.hasOverlayPermission()).toBe(true);

@@ -35,6 +35,11 @@ export interface BubbleOptions {
   notificationText?: string;
   /** When the bubble is on screen while enabled. Defaults to `'background'`. */
   showWhen?: ShowWhen;
+  /**
+   * Tapping the bubble hides it until the app next goes to the background. Defaults to `true`.
+   * Set `false` to keep the bubble on screen after a tap. Either way it stays enabled.
+   */
+  hideOnPress?: boolean;
 }
 
 /** Options as the native module receives them: `require()` images already resolved to a URI. */
