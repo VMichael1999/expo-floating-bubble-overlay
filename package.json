@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node internal/module_scripts/build.js",
     "clean": "node internal/module_scripts/clean.js",
-    "lint": "eslint src/",
+    "lint": "eslint src plugin/src",
     "test": "node internal/module_scripts/test.js",
     "prepare": "node internal/module_scripts/prepare.js",
     "open:ios": "node internal/module_scripts/open-ios.js",
@@ -16,8 +16,13 @@
   "keywords": [
     "react-native",
     "expo",
-    "expo-floating-bubble-overlay",
-    "FloatingBubbleOverlay"
+    "expo-module",
+    "android",
+    "floating-bubble",
+    "chat-head",
+    "overlay",
+    "floating-widget",
+    "system-alert-window"
   ],
   "repository": "https://github.com/VMichael1999/expo-floating-bubble-overlay",
   "bugs": {

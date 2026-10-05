@@ -14,3 +14,8 @@ __tests__
 /android/build/
 /example/
 /docs/
+
+# Development-only files
+*.tsbuildinfo
+/.prettierrc
+/eslint.config.cjs
