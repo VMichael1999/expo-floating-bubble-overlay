@@ -1,13 +1,13 @@
 import { NativeModule, requireOptionalNativeModule } from 'expo';
 import { Platform } from 'react-native';
 
-import type { BubbleOptions, FloatingBubbleEvents } from './FloatingBubbleOverlay.types';
+import type { FloatingBubbleEvents, NativeBubbleOptions } from './FloatingBubbleOverlay.types';
 
 declare class FloatingBubbleOverlayModule extends NativeModule<FloatingBubbleEvents> {
   hasOverlayPermission(): boolean;
   openOverlayPermissionSettings(): void;
-  enable(options: BubbleOptions): boolean;
-  startKeepAlive(options: BubbleOptions): void;
+  enable(options: NativeBubbleOptions): boolean;
+  startKeepAlive(options: NativeBubbleOptions): void;
   stopKeepAlive(): void;
   disable(): void;
   bringAppToForeground(): boolean;

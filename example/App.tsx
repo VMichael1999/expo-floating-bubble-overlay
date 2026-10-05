@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
-import { FloatingBubble, type ShowWhen } from 'expo-floating-bubble-overlay';
+import { type BubbleOptions, FloatingBubble, type ShowWhen } from 'expo-floating-bubble-overlay';
 import { AppState, Button, SafeAreaView, ScrollView, Switch, Text, View } from 'react-native';
 
 const MODES: ShowWhen[] = ['background', 'foreground', 'always'];
+// Any image works: require(), an https URL, a file:// URI, base64 or a native resource name
+const CUSTOM_ICON = require('./assets/splash-icon.png');
 
 export default function App() {
   const [hasPermission, setHasPermission] = useState(FloatingBubble.hasOverlayPermission());
   const [enabled, setEnabled] = useState(FloatingBubble.isEnabled());
   const [showWhen, setShowWhen] = useState<ShowWhen>('background');
+  const [customIcon, setCustomIcon] = useState(false);
   const [lastEvent, setLastEvent] = useState('—');
 
   useEffect(() => {
@@ -28,6 +31,13 @@ export default function App() {
     };
   }, []);
 
+  // Without `icon` the bubble shows the app icon
+  const options = (mode: ShowWhen, custom: boolean): BubbleOptions => ({
+    showWhen: mode,
+    notificationTitle: 'Bubble active',
+    ...(custom ? { icon: CUSTOM_ICON } : {}),
+  });
+
   // Like a "Show floating bubble" switch in the app settings
   const toggle = (on: boolean) => {
     if (!on) {
@@ -35,17 +45,22 @@ export default function App() {
       setEnabled(false);
       return;
     }
-    if (!FloatingBubble.enable({ showWhen, notificationTitle: 'Bubble active' })) {
+    if (!FloatingBubble.enable(options(showWhen, customIcon))) {
       FloatingBubble.openOverlayPermissionSettings();
       return;
     }
     setEnabled(true);
   };
 
+  // Enabling again applies the new options
   const changeMode = (mode: ShowWhen) => {
     setShowWhen(mode);
-    // Enabling again applies the new options
-    if (enabled) FloatingBubble.enable({ showWhen: mode, notificationTitle: 'Bubble active' });
+    if (enabled) FloatingBubble.enable(options(mode, customIcon));
+  };
+
+  const changeIcon = (custom: boolean) => {
+    setCustomIcon(custom);
+    if (enabled) FloatingBubble.enable(options(showWhen, custom));
   };
 
   return (
@@ -56,6 +71,10 @@ export default function App() {
           <View style={styles.row}>
             <Text>Show floating bubble</Text>
             <Switch value={enabled} onValueChange={toggle} />
+          </View>
+          <View style={styles.row}>
+            <Text>Custom icon (off = app icon)</Text>
+            <Switch value={customIcon} onValueChange={changeIcon} />
           </View>
           <Text>Show when:</Text>
           {MODES.map((mode) => (
