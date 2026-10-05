@@ -34,8 +34,8 @@ class FloatingBubbleOverlayModule : Module() {
       BubbleController.openOverlayPermissionSettings(context)
     }
 
-    Function("show") { options: Map<String, Any?> ->
-      BubbleController.show(context, BubbleOptions.fromMap(options))
+    Function("enable") { options: Map<String, Any?> ->
+      BubbleController.enable(context, BubbleOptions.fromMap(options))
     }
 
     Function("startKeepAlive") { options: Map<String, Any?> ->
@@ -46,8 +46,8 @@ class FloatingBubbleOverlayModule : Module() {
       BubbleController.stopKeepAlive(context)
     }
 
-    Function("hide") {
-      BubbleController.hide(context)
+    Function("disable") {
+      BubbleController.disable(context)
     }
 
     Function("bringAppToForeground") {
@@ -60,6 +60,10 @@ class FloatingBubbleOverlayModule : Module() {
 
     Function("cancelScheduledBringAppToForeground") {
       BubbleController.cancelScheduledBringAppToForeground()
+    }
+
+    Function("isEnabled") {
+      BubbleController.isEnabled
     }
 
     Function("isVisible") {

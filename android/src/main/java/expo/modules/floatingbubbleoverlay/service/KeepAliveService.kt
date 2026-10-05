@@ -57,7 +57,7 @@ class KeepAliveService : Service() {
 
   /** If the user swipes the app away from recents, the bubble goes with it. */
   override fun onTaskRemoved(rootIntent: Intent?) {
-    BubbleController.hide(this)
+    BubbleController.disable(this)
     stopSelf()
     super.onTaskRemoved(rootIntent)
   }

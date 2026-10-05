@@ -1,5 +1,6 @@
 package expo.modules.floatingbubbleoverlay
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
 import android.app.NotificationManager
@@ -82,22 +83,26 @@ class BubbleControllerTest {
       override fun onPress() { presses++ }
       override fun onDismiss() { dismissals++ }
     }
-    BubbleController.hide(app)
+    BubbleController.disable(app)
     advance()
   }
 
+  /** An app activity that can be moved between foreground and background. */
+  private fun appActivity() = Robolectric.buildActivity(Activity::class.java).create()
+
   @Test
-  fun withoutPermissionItIsNotShown() {
+  fun withoutPermissionItIsNotEnabled() {
     ShadowSettings.setCanDrawOverlays(false)
     assertFalse(BubbleController.hasOverlayPermission(app))
-    assertFalse(BubbleController.show(app, BubbleOptions()))
+    assertFalse(BubbleController.enable(app, BubbleOptions()))
     advance()
     assertTrue(views().isEmpty())
+    assertFalse(BubbleController.isEnabled)
   }
 
   @Test
-  fun withPermissionAndAppInBackgroundItShowsAsOverlay() {
-    assertTrue(BubbleController.show(app, BubbleOptions()))
+  fun enabledWithTheAppInBackgroundItShowsAsOverlay() {
+    assertTrue(BubbleController.enable(app, BubbleOptions()))
     advance()
     assertEquals(1, views().size)
     val lp = views()[0].layoutParams as WindowManager.LayoutParams
@@ -110,38 +115,107 @@ class BubbleControllerTest {
   }
 
   @Test
-  fun withAppVisibleItWaitsAndThenIsNotShown() {
-    importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE)
-    BubbleController.show(app, BubbleOptions())
-    advance(300)
+  fun byDefaultItDoesNotShowWhileTheAppIsInForeground() {
+    importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
+    assertTrue(BubbleController.enable(app, BubbleOptions()))
+    advance()
     assertTrue("must not appear over its own app", views().isEmpty())
-    advance(2000)
-    assertTrue(views().isEmpty())
+    assertTrue(BubbleController.isEnabled)
     assertFalse(BubbleController.isVisible)
   }
 
   @Test
-  fun ifTheAppStopsBeingVisibleWhileWaitingItShows() {
-    importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE)
-    BubbleController.show(app, BubbleOptions())
-    advance(300)
+  fun backgroundModeHidesWhenTheAppComesBackAndShowsWhenItLeaves() {
+    BubbleController.enable(app, BubbleOptions())
+    advance()
+    assertEquals(1, views().size)
+
+    val activity = appActivity().start()
+    advance()
+    assertTrue("hidden while the app is in foreground", views().isEmpty())
+
+    activity.stop()
+    advance()
+    assertEquals("shown again when the app leaves", 1, views().size)
+  }
+
+  @Test
+  fun aDialogOverTheAppDoesNotShowTheBubble() {
+    val activity = appActivity().start().resume()
+    importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
+    BubbleController.enable(app, BubbleOptions())
+    advance()
+    activity.pause() // a system dialog only pauses the activity
+    advance()
     assertTrue(views().isEmpty())
-    importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED)
-    advance(300)
+  }
+
+  @Test
+  fun foregroundModeShowsOnlyWhileTheAppIsInForeground() {
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.FOREGROUND))
+    advance()
+    assertTrue(views().isEmpty())
+
+    val activity = appActivity().start()
+    advance()
+    assertEquals(1, views().size)
+
+    activity.stop()
+    advance()
+    assertTrue(views().isEmpty())
+  }
+
+  @Test
+  fun alwaysModeShowsInBothStates() {
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS))
+    advance()
+    assertEquals(1, views().size)
+
+    val activity = appActivity().start()
+    advance()
+    assertEquals(1, views().size)
+
+    activity.stop()
+    advance()
     assertEquals(1, views().size)
   }
 
   @Test
-  fun hidingBeforeItAppearsLeavesNothing() {
-    BubbleController.show(app, BubbleOptions())
-    BubbleController.hide(app)
+  fun disableRemovesTheBubbleAndStopsFollowingTheApp() {
+    BubbleController.enable(app, BubbleOptions())
+    advance()
+    BubbleController.disable(app)
+    advance()
+    assertTrue(views().isEmpty())
+    assertFalse(BubbleController.isEnabled)
+
+    appActivity().start().stop()
+    advance()
+    assertTrue("stays off after the app comes and goes", views().isEmpty())
+  }
+
+  @Test
+  fun disablingBeforeItAppearsLeavesNothing() {
+    BubbleController.enable(app, BubbleOptions())
+    BubbleController.disable(app)
     advance(2000)
     assertTrue(views().isEmpty())
   }
 
   @Test
-  fun tapBringsTheAppToForegroundAndHidesTheBubble() {
-    BubbleController.show(app, BubbleOptions())
+  fun enablingAgainWithOtherOptionsAppliesThem() {
+    BubbleController.enable(app, BubbleOptions(sizeDp = 60))
+    advance()
+    BubbleController.enable(app, BubbleOptions(sizeDp = 80))
+    advance()
+    assertEquals(1, views().size)
+    val d = app.resources.displayMetrics.density
+    assertEquals(((80 + 16) * d).toInt(), (views()[0].layoutParams as WindowManager.LayoutParams).width)
+  }
+
+  @Test
+  fun tapInBackgroundBringsTheAppBackAndKeepsTheBubbleEnabled() {
+    BubbleController.enable(app, BubbleOptions())
     advance()
     val v = views()[0]
     touch(v, MotionEvent.ACTION_DOWN, 30f, 30f)
@@ -152,12 +226,26 @@ class BubbleControllerTest {
     assertEquals("MainActivity", started.component?.className)
     assertTrue(started.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
     assertEquals(1, presses)
-    assertTrue(views().isEmpty())
+    assertTrue(BubbleController.isEnabled)
+  }
+
+  @Test
+  fun tapInForegroundDoesNotRelaunchTheApp() {
+    appActivity().start()
+    importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
+    BubbleController.enable(app, BubbleOptions(showWhen = ShowWhen.ALWAYS))
+    advance()
+    val v = views()[0]
+    touch(v, MotionEvent.ACTION_DOWN, 30f, 30f)
+    touch(v, MotionEvent.ACTION_UP, 30f, 30f)
+    advance()
+    assertEquals(null, shadowOf(app).nextStartedActivity)
+    assertEquals(1, presses)
   }
 
   @Test
   fun draggingShowsTheXAndReleasingAwaySnapsToTheEdge() {
-    BubbleController.show(app, BubbleOptions())
+    BubbleController.enable(app, BubbleOptions())
     advance()
     val v = views()[0]
     touch(v, MotionEvent.ACTION_DOWN, 30f, 30f)
@@ -172,8 +260,8 @@ class BubbleControllerTest {
   }
 
   @Test
-  fun releasingOverTheXDismissesIt() {
-    BubbleController.show(app, BubbleOptions())
+  fun releasingOverTheXDisablesIt() {
+    BubbleController.enable(app, BubbleOptions())
     advance()
     val v = views()[0]
     val lp = v.layoutParams as WindowManager.LayoutParams
@@ -191,11 +279,12 @@ class BubbleControllerTest {
     assertEquals(0, presses)
     assertTrue(views().isEmpty())
     assertFalse(BubbleController.isVisible)
+    assertFalse("stays off until the app enables it again", BubbleController.isEnabled)
   }
 
   @Test
   fun serviceGoesForegroundWithItsNotification() {
-    BubbleController.show(app, BubbleOptions(notificationTitle = "Viaje en curso"))
+    BubbleController.enable(app, BubbleOptions(notificationTitle = "Viaje en curso"))
     advance()
     val controller = Robolectric.buildService(
       KeepAliveService::class.java,
@@ -211,7 +300,7 @@ class BubbleControllerTest {
   @Test
   fun defaultTextsAreInEnglish() {
     val label = app.packageManager.getApplicationLabel(app.applicationInfo).toString()
-    BubbleController.show(app, BubbleOptions())
+    BubbleController.enable(app, BubbleOptions())
     advance()
     assertEquals("Return to $label", views()[0].contentDescription)
 
@@ -274,7 +363,7 @@ class BubbleControllerTest {
 
   @Test
   fun serviceStartedWithTheBubbleAlreadyHiddenStopsItself() {
-    BubbleController.hide(app)
+    BubbleController.disable(app)
     advance()
     val service = Robolectric.buildService(KeepAliveService::class.java, Intent(app, KeepAliveService::class.java))
       .create().startCommand(0, 1).get()
@@ -286,7 +375,7 @@ class BubbleControllerTest {
   fun keepAliveServiceDoesNotStopWithoutTheBubble() {
     KeepAliveService.keepAlive = true
     try {
-      BubbleController.hide(app)
+      BubbleController.disable(app)
       advance()
       val service = Robolectric.buildService(KeepAliveService::class.java, Intent(app, KeepAliveService::class.java))
         .create().startCommand(0, 1).get()
@@ -300,7 +389,7 @@ class BubbleControllerTest {
   @Test
   fun withForegroundServiceAndAppMinimizedItShows() {
     importance(ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE)
-    assertTrue(BubbleController.show(app, BubbleOptions()))
+    assertTrue(BubbleController.enable(app, BubbleOptions()))
     advance()
     assertEquals(1, views().size)
     assertTrue(BubbleController.isVisible)

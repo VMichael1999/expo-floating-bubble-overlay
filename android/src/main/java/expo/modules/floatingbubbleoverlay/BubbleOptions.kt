@@ -1,5 +1,24 @@
 package expo.modules.floatingbubbleoverlay
 
+/** When the enabled bubble is on screen. */
+enum class ShowWhen {
+  /** Only while the app is in the background (default). */
+  BACKGROUND,
+  /** Only while the app is in the foreground. */
+  FOREGROUND,
+  /** In both states. */
+  ALWAYS;
+
+  companion object {
+    /** "background" | "foreground" | "always"; anything else falls back to [BACKGROUND]. */
+    fun fromJs(value: Any?): ShowWhen = when (value) {
+      "foreground" -> FOREGROUND
+      "always" -> ALWAYS
+      else -> BACKGROUND
+    }
+  }
+}
+
 /** Bubble options. They arrive from JS as a map; numbers come in as Double. */
 data class BubbleOptions(
   /** Bubble diameter in dp. */
@@ -18,6 +37,8 @@ data class BubbleOptions(
   /** Foreground service notification (required for a foreground service). */
   val notificationTitle: String? = null,
   val notificationText: String? = null,
+  /** When the bubble is on screen while enabled. */
+  val showWhen: ShowWhen = ShowWhen.BACKGROUND,
 ) {
   companion object {
     fun fromMap(m: Map<String, Any?>): BubbleOptions {
@@ -32,6 +53,7 @@ data class BubbleOptions(
         initialYDp = int("y"),
         notificationTitle = m["notificationTitle"] as? String,
         notificationText = m["notificationText"] as? String,
+        showWhen = ShowWhen.fromJs(m["showWhen"]),
       )
     }
   }

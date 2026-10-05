@@ -7,7 +7,8 @@ const noSubscription = { remove() {} };
 
 /**
  * Floating bubble over other apps (Android only). Tapping it brings the app to the foreground.
- * Where it is not available, every call is a safe no-op.
+ * Once enabled, the bubble shows and hides by itself as the app moves between foreground and
+ * background, following `showWhen`. Where it is not available, every call is a safe no-op.
  */
 export const FloatingBubble = {
   /** false on iOS, web and Expo Go. */
@@ -19,10 +20,18 @@ export const FloatingBubble = {
   /** Opens the system screen to grant the permission. */
   openOverlayPermissionSettings: (): void => native?.openOverlayPermissionSettings(),
 
-  /** @returns false if not available or the permission is missing. */
-  show: (options: BubbleOptions = {}): boolean => native?.show(options) ?? false,
+  /**
+   * Turns the bubble on. It then appears and disappears by itself following `showWhen`
+   * (by default, only while the app is in the background). Calling it again applies new options.
+   * @returns false if not available or the permission is missing.
+   */
+  enable: (options: BubbleOptions = {}): boolean => native?.enable(options) ?? false,
 
-  hide: (): void => native?.hide(),
+  /** Turns the bubble off and removes it from the screen. */
+  disable: (): void => native?.disable(),
+
+  /** Whether the bubble is turned on (it may still be hidden because of `showWhen`). */
+  isEnabled: (): boolean => native?.isEnabled() ?? false,
 
   /**
    * Keeps the app alive in the background (foreground service) without the bubble or its
@@ -33,6 +42,7 @@ export const FloatingBubble = {
   /** Stops keeping the app alive. */
   stopKeepAlive: (): void => native?.stopKeepAlive?.(),
 
+  /** Whether the bubble is on screen right now. */
   isVisible: (): boolean => native?.isVisible() ?? false,
 
   /**
@@ -54,6 +64,7 @@ export const FloatingBubble = {
   addPressListener: (listener: () => void) =>
     native?.addListener('onPress', listener) ?? noSubscription,
 
+  /** The user dropped the bubble on the X: it is now disabled until `enable()` is called again. */
   addDismissListener: (listener: () => void) =>
     native?.addListener('onDismiss', listener) ?? noSubscription,
 };

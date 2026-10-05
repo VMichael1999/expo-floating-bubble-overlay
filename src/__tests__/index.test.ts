@@ -6,13 +6,14 @@ function fakeNative() {
   return {
     hasOverlayPermission: jest.fn(() => true),
     openOverlayPermissionSettings: jest.fn(),
-    show: jest.fn(() => true),
+    enable: jest.fn(() => true),
     startKeepAlive: jest.fn(),
     stopKeepAlive: jest.fn(),
-    hide: jest.fn(),
+    disable: jest.fn(),
     bringAppToForeground: jest.fn(() => true),
     scheduleBringAppToForeground: jest.fn(),
     cancelScheduledBringAppToForeground: jest.fn(),
+    isEnabled: jest.fn(() => true),
     isVisible: jest.fn(() => true),
     addListener: jest.fn(() => ({ remove: jest.fn() })),
   };
@@ -46,11 +47,12 @@ describe('FloatingBubble without a native module', () => {
 
     expect(b.isAvailable).toBe(false);
     expect(b.hasOverlayPermission()).toBe(false);
-    expect(b.show()).toBe(false);
+    expect(b.enable()).toBe(false);
     expect(b.bringAppToForeground()).toBe(false);
+    expect(b.isEnabled()).toBe(false);
     expect(b.isVisible()).toBe(false);
     expect(() => {
-      b.hide();
+      b.disable();
       b.openOverlayPermissionSettings();
       b.startKeepAlive();
       b.stopKeepAlive();
@@ -58,14 +60,14 @@ describe('FloatingBubble without a native module', () => {
       b.cancelScheduledBringAppToForeground();
     }).not.toThrow();
     expect(b.addPressListener(jest.fn()).remove).toEqual(expect.any(Function));
-    expect(native.show).not.toHaveBeenCalled();
+    expect(native.enable).not.toHaveBeenCalled();
   });
 
   it('is a safe no-op on Android without a development build (Expo Go)', () => {
     const b = load('android', null);
 
     expect(b.isAvailable).toBe(false);
-    expect(b.show({ size: 60 })).toBe(false);
+    expect(b.enable({ size: 60 })).toBe(false);
     expect(() => b.addDismissListener(jest.fn()).remove()).not.toThrow();
   });
 });
@@ -74,23 +76,24 @@ describe('FloatingBubble on Android', () => {
   it('delegates every call to the native module', () => {
     const native = fakeNative();
     const b = load('android', native);
-    const options = { size: 72, notificationTitle: 'Bubble active' };
+    const options = { size: 72, notificationTitle: 'Bubble active', showWhen: 'always' as const };
 
     expect(b.isAvailable).toBe(true);
     expect(b.hasOverlayPermission()).toBe(true);
-    expect(b.show(options)).toBe(true);
-    expect(native.show).toHaveBeenCalledWith(options);
+    expect(b.enable(options)).toBe(true);
+    expect(native.enable).toHaveBeenCalledWith(options);
     expect(b.bringAppToForeground()).toBe(true);
+    expect(b.isEnabled()).toBe(true);
     expect(b.isVisible()).toBe(true);
 
-    b.hide();
+    b.disable();
     b.openOverlayPermissionSettings();
     b.startKeepAlive(options);
     b.stopKeepAlive();
     b.scheduleBringAppToForeground(4);
     b.cancelScheduledBringAppToForeground();
 
-    expect(native.hide).toHaveBeenCalled();
+    expect(native.disable).toHaveBeenCalled();
     expect(native.openOverlayPermissionSettings).toHaveBeenCalled();
     expect(native.startKeepAlive).toHaveBeenCalledWith(options);
     expect(native.stopKeepAlive).toHaveBeenCalled();
@@ -98,11 +101,11 @@ describe('FloatingBubble on Android', () => {
     expect(native.cancelScheduledBringAppToForeground).toHaveBeenCalled();
   });
 
-  it('show without options sends an empty object', () => {
+  it('enable without options sends an empty object (native defaults, showWhen background)', () => {
     const native = fakeNative();
-    load('android', native).show();
+    load('android', native).enable();
 
-    expect(native.show).toHaveBeenCalledWith({});
+    expect(native.enable).toHaveBeenCalledWith({});
   });
 
   it('subscribes to the onPress and onDismiss events', () => {
