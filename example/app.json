@@ -22,6 +22,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "../app.plugin.js",
+        {
+          "specialUseDescription": "Keeps the example app running so the floating bubble can bring it back"
+        }
+      ]
+    ]
   }
 }
