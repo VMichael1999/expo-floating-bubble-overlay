@@ -10,10 +10,11 @@
       android:name="expo.modules.floatingbubbleoverlay.service.KeepAliveService"
       android:exported="false"
       android:foregroundServiceType="specialUse">
-      <!-- Android 14+: justification for the specialUse type (also declared in Google Play Console) -->
+      <!-- Android 14+: justification for the specialUse type (also declared in Google Play Console).
+           Apps override it with the config plugin option "specialUseDescription". -->
       <property
         android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-        android:value="Mientras el conductor esta conectado: mantiene la app activa para recibir solicitudes de viaje y muestra un acceso directo flotante para volver a ella desde otras apps" />
+        android:value="Keeps the app running in the background and shows a floating shortcut to return to it from other apps" />
     </service>
   </application>
 </manifest>
