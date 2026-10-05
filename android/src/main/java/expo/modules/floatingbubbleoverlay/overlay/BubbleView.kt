@@ -97,7 +97,7 @@ internal class BubbleView(
     clipToPadding = false
     setPadding(padding, padding, padding, padding)
     addView(bubble, FrameLayout.LayoutParams(diameter, diameter))
-    contentDescription = "Volver a ${appName()}"
+    contentDescription = "Return to ${appName()}"
     // TalkBack: a double tap opens the app just like a tap
     setOnClickListener { onPress() }
   }

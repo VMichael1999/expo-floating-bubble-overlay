@@ -2,6 +2,7 @@ package expo.modules.floatingbubbleoverlay
 
 import android.app.ActivityManager
 import android.app.Application
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -205,6 +206,22 @@ class BubbleControllerTest {
     assertNotNull(n)
     assertEquals("Viaje en curso", n.extras.getString("android.title"))
     assertFalse("stays alive while the bubble is visible", shadowOf(service).isStoppedBySelf)
+  }
+
+  @Test
+  fun defaultTextsAreInEnglish() {
+    val label = app.packageManager.getApplicationLabel(app.applicationInfo).toString()
+    BubbleController.show(app, BubbleOptions())
+    advance()
+    assertEquals("Return to $label", views()[0].contentDescription)
+
+    val service = Robolectric.buildService(KeepAliveService::class.java, Intent(app, KeepAliveService::class.java))
+      .create().startCommand(0, 1).get()
+    val n = shadowOf(service).lastForegroundNotification
+    assertEquals(label, n.extras.getString("android.title"))
+    assertEquals("Tap to return to the app", n.extras.getCharSequence("android.text").toString())
+    val nm = app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    assertEquals("Floating bubble", nm.getNotificationChannel(n.channelId).name.toString())
   }
 
   @Test

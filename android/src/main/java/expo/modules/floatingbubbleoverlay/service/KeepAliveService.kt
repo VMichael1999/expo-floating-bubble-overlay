@@ -27,7 +27,7 @@ class KeepAliveService : Service() {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     val title = intent?.getStringExtra(EXTRA_TITLE)
       ?: packageManager.getApplicationLabel(applicationInfo).toString()
-    val text = intent?.getStringExtra(EXTRA_TEXT) ?: "Toca para volver a tu viaje"
+    val text = intent?.getStringExtra(EXTRA_TEXT) ?: DEFAULT_TEXT
     try {
       val notification = buildNotification(title, text)
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -68,8 +68,8 @@ class KeepAliveService : Service() {
       val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
       if (nm.getNotificationChannel(CHANNEL_ID) == null) {
         nm.createNotificationChannel(
-          NotificationChannel(CHANNEL_ID, "Viaje en curso", NotificationManager.IMPORTANCE_LOW).apply {
-            description = "Aviso mientras la burbuja para volver al viaje esta visible"
+          NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW).apply {
+            description = CHANNEL_DESCRIPTION
             setShowBadge(false)
           },
         )
@@ -92,6 +92,9 @@ class KeepAliveService : Service() {
 
   companion object {
     private const val CHANNEL_ID = "floating_bubble"
+    internal const val CHANNEL_NAME = "Floating bubble"
+    internal const val CHANNEL_DESCRIPTION = "Shown while the floating bubble keeps the app running"
+    internal const val DEFAULT_TEXT = "Tap to return to the app"
     private const val NOTIFICATION_ID = 4101
     internal const val EXTRA_TITLE = "title"
     internal const val EXTRA_TEXT = "text"
