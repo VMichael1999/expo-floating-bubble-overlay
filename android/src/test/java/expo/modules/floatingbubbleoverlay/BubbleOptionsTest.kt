@@ -20,9 +20,23 @@ class BubbleOptionsTest {
         "y" to 20.0,
         "notificationTitle" to "Title",
         "notificationText" to "Text",
+        "showWhen" to "always",
       ),
     )
-    assertEquals(BubbleOptions(72, 0.5f, "ic_bubble", 120, false, 10, 20, "Title", "Text"), o)
+    assertEquals(BubbleOptions(72, 0.5f, "ic_bubble", 120, false, 10, 20, "Title", "Text", ShowWhen.ALWAYS), o)
+  }
+
+  @Test
+  fun readsEveryShowWhenValue() {
+    assertEquals(ShowWhen.BACKGROUND, BubbleOptions.fromMap(mapOf("showWhen" to "background")).showWhen)
+    assertEquals(ShowWhen.FOREGROUND, BubbleOptions.fromMap(mapOf("showWhen" to "foreground")).showWhen)
+    assertEquals(ShowWhen.ALWAYS, BubbleOptions.fromMap(mapOf("showWhen" to "always")).showWhen)
+  }
+
+  @Test
+  fun unknownShowWhenFallsBackToBackground() {
+    assertEquals(ShowWhen.BACKGROUND, BubbleOptions.fromMap(mapOf("showWhen" to "sometimes")).showWhen)
+    assertEquals(ShowWhen.BACKGROUND, BubbleOptions.fromMap(mapOf("showWhen" to 1.0)).showWhen)
   }
 
   @Test

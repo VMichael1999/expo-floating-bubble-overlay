@@ -35,7 +35,7 @@ class FloatingBubbleOverlayModule : Module() {
     }
 
     Function("show") { options: Map<String, Any?> ->
-      BubbleController.show(context, BubbleOptions.fromMap(options))
+      BubbleController.enable(context, BubbleOptions.fromMap(options))
     }
 
     Function("startKeepAlive") { options: Map<String, Any?> ->
@@ -47,7 +47,7 @@ class FloatingBubbleOverlayModule : Module() {
     }
 
     Function("hide") {
-      BubbleController.hide(context)
+      BubbleController.disable(context)
     }
 
     Function("bringAppToForeground") {

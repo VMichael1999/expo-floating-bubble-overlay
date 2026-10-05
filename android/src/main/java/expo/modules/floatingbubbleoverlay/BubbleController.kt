@@ -1,21 +1,24 @@
 package expo.modules.floatingbubbleoverlay
 
+import android.app.Activity
 import android.app.ActivityManager
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import expo.modules.floatingbubbleoverlay.overlay.BubbleView
 import expo.modules.floatingbubbleoverlay.service.KeepAliveService
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Single entry point to show and hide the bubble. Safe to call from any thread:
- * view work runs on the main thread, in the order it was requested.
+ * Single entry point for the bubble. Once enabled, it shows or hides the bubble by itself
+ * as the app moves between foreground and background, according to [BubbleOptions.showWhen].
+ * Safe to call from any thread: view work runs on the main thread, in the order it was requested.
  */
 object BubbleController {
   internal const val TAG = "FloatingBubble"
@@ -27,17 +30,23 @@ object BubbleController {
 
   @Volatile var listener: Listener? = null
 
-  /** What was last requested (the view is created a moment later, on the main thread). */
+  /** The developer turned the bubble on (it may still be hidden because of [BubbleOptions.showWhen]). */
+  @Volatile var isEnabled = false
+    private set
+
+  /** The bubble is on screen right now. */
   @Volatile var isVisible = false
     private set
 
-  private const val RETRY_DELAY_MS = 250L
-  private const val MAX_RETRIES = 6
-
   private val mainHandler = Handler(Looper.getMainLooper())
+
+  // Main-thread state
   private var view: BubbleView? = null
-  /** Each show/hide invalidates the pending retries of the previous request. */
-  private val lastRequest = AtomicInteger(0)
+  private var options = BubbleOptions()
+  private var lifecycleApp: Application? = null
+  private var startedActivities = 0
+
+  private val appInForeground get() = startedActivities > 0
 
   fun hasOverlayPermission(ctx: Context): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(ctx)
@@ -57,31 +66,47 @@ object BubbleController {
     }
   }
 
-  /** @return false if the permission is missing; true if the bubble will show (or already was). */
-  fun show(ctx: Context, options: BubbleOptions): Boolean {
+  /**
+   * Turns the bubble on. From now on it appears and disappears by itself following
+   * [BubbleOptions.showWhen]. Calling it again with other options applies them.
+   * @return false if the overlay permission is missing.
+   */
+  fun enable(ctx: Context, options: BubbleOptions): Boolean {
     val app = ctx.applicationContext
     if (!hasOverlayPermission(app)) return false
-    isVisible = true
-    val request = lastRequest.incrementAndGet()
-    mainHandler.post { tryShow(app, options, request, attempts = 0) }
+    isEnabled = true
+    mainHandler.post {
+      if (!isEnabled) return@post
+      watchLifecycle(app)
+      if (options != this.options) {
+        // Recreate the bubble with the new options
+        removeView(app)
+        this.options = options
+      }
+      update(app)
+    }
     return true
   }
 
-  /**
-   * React Native reports "background" as soon as the activity pauses, which also happens when
-   * a system dialog covers the app. The bubble only shows once the app is no longer visible;
-   * if it is still visible after ~1.5 s (a dialog), it is not shown.
-   */
-  private fun tryShow(app: Context, options: BubbleOptions, request: Int, attempts: Int) {
-    if (!isVisible || request != lastRequest.get() || view != null) return
-    if (isAppVisible()) {
-      if (attempts < MAX_RETRIES) {
-        mainHandler.postDelayed({ tryShow(app, options, request, attempts + 1) }, RETRY_DELAY_MS)
-      } else {
-        isVisible = false
-      }
-      return
+  /** Turns the bubble off: it is removed and stops following the app state. */
+  fun disable(ctx: Context) {
+    val app = ctx.applicationContext
+    isEnabled = false
+    mainHandler.post { removeView(app) }
+  }
+
+  /** Shows or hides the bubble for the current app state. */
+  private fun update(app: Context) {
+    val shouldShow = isEnabled && when (options.showWhen) {
+      ShowWhen.BACKGROUND -> !appInForeground
+      ShowWhen.FOREGROUND -> appInForeground
+      ShowWhen.ALWAYS -> true
     }
+    if (shouldShow) addView(app) else removeView(app)
+  }
+
+  private fun addView(app: Context) {
+    if (view != null) return
     lateinit var newView: BubbleView
     newView = BubbleView(
       app,
@@ -89,19 +114,56 @@ object BubbleController {
       onPress = { pressed(app) },
       onDismiss = { dismissedByUser(app) },
       // Android 15 only allows starting the service from the background once the window is visible
-      onBecameVisible = { if (view === newView && isVisible) KeepAliveService.start(app, options) },
+      onBecameVisible = { if (view === newView) KeepAliveService.start(app, options) },
     )
     try {
       newView.attach()
     } catch (e: Exception) {
       Log.w(TAG, "Could not show the bubble", e)
-      isVisible = false
       return
     }
     view = newView
+    isVisible = true
   }
 
-  /** true if any activity of the app is still on screen (even if paused). */
+  private fun removeView(app: Context) {
+    val current = view ?: return
+    current.detach()
+    view = null
+    isVisible = false
+    KeepAliveService.stop(app)
+  }
+
+  /**
+   * Follows the app between foreground and background with the activity lifecycle.
+   * A dialog over the app only pauses the activity, so it does not count as leaving the app.
+   */
+  private fun watchLifecycle(ctx: Context) {
+    val app = ctx as? Application ?: return
+    if (lifecycleApp === app) return
+    lifecycleApp = app
+    // Activities started before registering are not reported: start from the current state
+    startedActivities = if (isAppVisible()) 1 else 0
+    app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+      override fun onActivityStarted(activity: Activity) {
+        startedActivities++
+        update(app)
+      }
+
+      override fun onActivityStopped(activity: Activity) {
+        startedActivities = (startedActivities - 1).coerceAtLeast(0)
+        update(app)
+      }
+
+      override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+      override fun onActivityResumed(activity: Activity) {}
+      override fun onActivityPaused(activity: Activity) {}
+      override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+      override fun onActivityDestroyed(activity: Activity) {}
+    })
+  }
+
+  /** true if any activity of the app is on screen. A foreground service alone does not count. */
   private fun isAppVisible(): Boolean {
     val state = ActivityManager.RunningAppProcessInfo()
     ActivityManager.getMyMemoryState(state)
@@ -110,17 +172,6 @@ object BubbleController {
       return false
     }
     return state.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
-  }
-
-  fun hide(ctx: Context) {
-    val app = ctx.applicationContext
-    isVisible = false
-    lastRequest.incrementAndGet()
-    mainHandler.post {
-      view?.detach()
-      view = null
-      KeepAliveService.stop(app)
-    }
   }
 
   /**
@@ -141,14 +192,15 @@ object BubbleController {
     mainHandler.post { if (!isVisible) KeepAliveService.stop(app) }
   }
 
+  /** Tapping the bubble brings the app back if it is in the background; the bubble stays enabled. */
   private fun pressed(app: Context) {
-    bringAppToForeground(app)
-    hide(app)
+    if (!appInForeground) bringAppToForeground(app)
     listener?.onPress()
   }
 
+  /** Dropping the bubble on the X turns it off until the app enables it again. */
   private fun dismissedByUser(app: Context) {
-    hide(app)
+    disable(app)
     listener?.onDismiss()
   }
 
