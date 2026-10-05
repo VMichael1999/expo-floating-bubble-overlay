@@ -1,6 +1,6 @@
 # Changelog
 
-## Unpublished
+## 0.1.0 (2026-10-05)
 
 First release of `expo-floating-bubble-overlay`, extracted from the floating bubble built for the Run Pilot app and turned into a generic package.
 
