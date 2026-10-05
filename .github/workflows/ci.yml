@@ -35,3 +35,52 @@ jobs:
 
       - name: Jest (JS API and config plugin)
         run: npm test -- --ci
+
+  android:
+    name: Android (Robolectric)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            example/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install the package and the example app
+        run: |
+          npm ci
+          npm ci --prefix example
+
+      # The example app.json uses the config plugin from plugin/build
+      - name: Build the config plugin
+        run: npx tsc --build plugin
+
+      - name: Type-check the example app
+        working-directory: example
+        run: npx tsc --noEmit
+
+      - name: Generate the example Android project
+        working-directory: example
+        run: npx expo prebuild -p android --no-install
+
+      - name: Robolectric tests
+        working-directory: example/android
+        run: ./gradlew :expo-floating-bubble-overlay:testDebugUnitTest --console=plain
+
+      - name: Upload the test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robolectric-report
+          path: android/build/reports/tests/testDebugUnitTest
