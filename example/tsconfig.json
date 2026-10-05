@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "expo-floating-bubble-overlay": ["../src/index"],
+      "expo-floating-bubble-overlay/*": ["../src/*"]
+    }
+  }
+}
