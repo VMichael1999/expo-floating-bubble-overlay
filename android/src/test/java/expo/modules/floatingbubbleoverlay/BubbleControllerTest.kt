@@ -224,6 +224,54 @@ class BubbleControllerTest {
     assertEquals("Floating bubble", nm.getNotificationChannel(n.channelId).name.toString())
   }
 
+  /** The service state is static: destroying a service resets it between tests. */
+  private fun resetServiceState() {
+    Robolectric.buildService(KeepAliveService::class.java).create().destroy()
+  }
+
+  private fun postedNotification() =
+    shadowOf(app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+      .getNotification(KeepAliveService.NOTIFICATION_ID)
+
+  @Test
+  fun startWhileRunningUpdatesTheNotification() {
+    resetServiceState()
+    KeepAliveService.keepAlive = true
+    val running = Robolectric.buildService(
+      KeepAliveService::class.java,
+      Intent(app, KeepAliveService::class.java).putExtra(KeepAliveService.EXTRA_TITLE, "Online"),
+    ).create().startCommand(0, 1)
+    try {
+      KeepAliveService.start(app, BubbleOptions(notificationTitle = "Trip in progress", notificationText = "Tap to return"))
+
+      val n = postedNotification()
+      assertNotNull(n)
+      assertEquals("Trip in progress", n.extras.getString("android.title"))
+      assertEquals("Tap to return", n.extras.getCharSequence("android.text").toString())
+      assertEquals("does not start the service again", null, shadowOf(app).nextStartedService)
+    } finally {
+      KeepAliveService.keepAlive = false
+      running.destroy()
+    }
+  }
+
+  @Test
+  fun startWhileStartingUsesTheLatestTexts() {
+    resetServiceState()
+    KeepAliveService.keepAlive = true
+    try {
+      KeepAliveService.start(app, BubbleOptions(notificationTitle = "Online"))
+      val firstIntent = shadowOf(app).nextStartedService
+      KeepAliveService.start(app, BubbleOptions(notificationTitle = "Trip in progress"))
+
+      val service = Robolectric.buildService(KeepAliveService::class.java, firstIntent).create().startCommand(0, 1)
+      assertEquals("Trip in progress", shadowOf(service.get()).lastForegroundNotification.extras.getString("android.title"))
+      service.destroy()
+    } finally {
+      KeepAliveService.keepAlive = false
+    }
+  }
+
   @Test
   fun serviceStartedWithTheBubbleAlreadyHiddenStopsItself() {
     BubbleController.hide(app)
