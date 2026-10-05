@@ -19,13 +19,26 @@ function fakeNative() {
   };
 }
 
-/** Loads the facade with the given platform and native module. */
-function load(os: typeof Platform.OS, native: ReturnType<typeof fakeNative> | null): Facade {
+/** Loads the facade with the given platform, native module and `require()` asset resolution. */
+function load(
+  os: typeof Platform.OS,
+  native: ReturnType<typeof fakeNative> | null,
+  resolveAsset: (asset: number) => { uri: string } | null = () => null
+): Facade {
   let facade!: Facade;
   jest.isolateModules(() => {
     jest.doMock('expo', () => ({
       ...jest.requireActual('expo'),
       requireOptionalNativeModule: jest.fn(() => native),
+    }));
+    // Image.resolveAssetSource delegates to this module; expo registers transformers on it
+    jest.doMock('react-native/Libraries/Image/resolveAssetSource', () => ({
+      __esModule: true,
+      default: Object.assign(resolveAsset, {
+        setCustomSourceTransformer: () => {},
+        addCustomSourceTransformer: () => {},
+        pickScale: () => 1,
+      }),
     }));
     require('react-native').Platform.OS = os;
     facade = require('../index').FloatingBubble;
@@ -37,6 +50,7 @@ const originalOS = Platform.OS;
 
 afterEach(() => {
   jest.dontMock('expo');
+  jest.dontMock('react-native/Libraries/Image/resolveAssetSource');
   Platform.OS = originalOS;
 });
 
@@ -119,5 +133,49 @@ describe('FloatingBubble on Android', () => {
 
     expect(native.addListener).toHaveBeenCalledWith('onPress', onPress);
     expect(native.addListener).toHaveBeenCalledWith('onDismiss', onDismiss);
+  });
+});
+
+describe('FloatingBubble icon', () => {
+  const DEV_URI = 'http://10.0.2.2:8081/assets/bubble.png?platform=android';
+
+  it('without icon sends no icon, so the native side uses the app icon', () => {
+    const native = fakeNative();
+    load('android', native).enable({ size: 60 });
+
+    expect(native.enable).toHaveBeenCalledWith({ size: 60 });
+  });
+
+  it('turns a require() image into the URI the native side loads', () => {
+    const native = fakeNative();
+    const b = load('android', native, (asset) => (asset === 42 ? { uri: DEV_URI } : null));
+
+    b.enable({ icon: 42, showWhen: 'always' });
+    b.startKeepAlive({ icon: 42 });
+
+    expect(native.enable).toHaveBeenCalledWith({ icon: DEV_URI, showWhen: 'always' });
+    expect(native.startKeepAlive).toHaveBeenCalledWith({ icon: DEV_URI });
+  });
+
+  it('passes URLs, files, base64 and resource names through unchanged', () => {
+    const native = fakeNative();
+    const b = load('android', native);
+
+    for (const icon of [
+      'https://x.com/a.png',
+      'file:///a.png',
+      'data:image/png;base64,AA',
+      'ic_bubble',
+    ]) {
+      b.enable({ icon });
+      expect(native.enable).toHaveBeenLastCalledWith({ icon });
+    }
+  });
+
+  it('drops a require() image that cannot be resolved, keeping the app icon', () => {
+    const native = fakeNative();
+    load('android', native, () => null).enable({ icon: 7, size: 50 });
+
+    expect(native.enable).toHaveBeenCalledWith({ size: 50 });
   });
 });

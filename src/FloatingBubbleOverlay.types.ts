@@ -12,8 +12,17 @@ export interface BubbleOptions {
   size?: number;
   /** From 0.2 to 1. Defaults to 1. */
   opacity?: number;
-  /** Name of a native drawable/mipmap; defaults to the app icon. */
-  icon?: string;
+  /**
+   * Image shown in the bubble. **Defaults to your app icon.** Accepts:
+   * - a local image: `require('./assets/bubble.png')`
+   * - a remote image: `'https://example.com/bubble.png'`
+   * - a local file: `'file:///data/.../bubble.png'`
+   * - a base64 data URI: `'data:image/png;base64,...'`
+   * - the name of a native drawable/mipmap: `'ic_bubble'`
+   *
+   * If the image cannot be loaded, the app icon is kept.
+   */
+  icon?: string | number;
   /** How close to the X the bubble must be released to dismiss it. Defaults to 96. */
   dismissDistance?: number;
   /** On release the bubble snaps to the nearest side edge. Defaults to true. */
@@ -27,6 +36,9 @@ export interface BubbleOptions {
   /** When the bubble is on screen while enabled. Defaults to `'background'`. */
   showWhen?: ShowWhen;
 }
+
+/** Options as the native module receives them: `require()` images already resolved to a URI. */
+export type NativeBubbleOptions = Omit<BubbleOptions, 'icon'> & { icon?: string };
 
 export type FloatingBubbleEvents = {
   /** The bubble was tapped: the app is already coming to the foreground and the bubble is hidden. */

@@ -60,8 +60,10 @@ internal class BubbleView(
   private val topInset = dp(48)
   private val bottomInset = dp(96)
 
+  private val iconSource = BubbleIcon.parse(options.icon)
+
   private val bubble = ImageView(ctx).apply {
-    setImageDrawable(icon())
+    setImageDrawable(initialIcon())
     scaleType = ImageView.ScaleType.FIT_CENTER
     background = GradientDrawable().apply {
       shape = GradientDrawable.OVAL
@@ -317,17 +319,19 @@ internal class BubbleView(
       Point(m.widthPixels, m.heightPixels)
     }
 
-  private fun icon(): Drawable {
-    val name = options.icon
-    if (name != null) {
-      val res = ctx.resources
-      val id = res.getIdentifier(name, "drawable", ctx.packageName)
-        .takeIf { it != 0 } ?: res.getIdentifier(name, "mipmap", ctx.packageName)
-      if (id != 0) runCatching { return ctx.getDrawable(id)!! }
+  /**
+   * The app icon by default. A native resource is used right away; a file, URL or base64 image
+   * is loaded in the background and replaces the app icon when it arrives (or never, if it fails).
+   */
+  private fun initialIcon(): Drawable = when (iconSource) {
+    is BubbleIcon.AppIcon -> BubbleIcon.appIcon(ctx)
+    is BubbleIcon.Resource -> BubbleIcon.resource(ctx, iconSource.name) ?: BubbleIcon.appIcon(ctx)
+    else -> {
+      BubbleIcon.load(ctx, iconSource, diameter) { loaded ->
+        if (loaded != null && attached) bubble.setImageDrawable(loaded)
+      }
+      BubbleIcon.appIcon(ctx)
     }
-    // Fallback: without an app icon (rare) use the system generic one, never crash
-    return runCatching { ctx.packageManager.getApplicationIcon(ctx.packageName) as Drawable? }.getOrNull()
-      ?: ctx.getDrawable(android.R.drawable.sym_def_app_icon)!!
   }
 
   private fun appName(): String = ctx.packageManager.getApplicationLabel(ctx.applicationInfo).toString()

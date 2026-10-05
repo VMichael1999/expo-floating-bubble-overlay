@@ -1,9 +1,21 @@
-import type { BubbleOptions } from './FloatingBubbleOverlay.types';
+import { Image } from 'react-native';
+
+import type { BubbleOptions, NativeBubbleOptions } from './FloatingBubbleOverlay.types';
 import native from './FloatingBubbleOverlayModule';
 
 export * from './FloatingBubbleOverlay.types';
 
 const noSubscription = { remove() {} };
+
+/**
+ * Turns a `require()` image into the URI the native side loads: the Metro dev server URL in
+ * development, a bundled resource name in release builds. Other values pass through as they are.
+ */
+function toNative({ icon, ...rest }: BubbleOptions): NativeBubbleOptions {
+  if (typeof icon !== 'number') return icon === undefined ? rest : { ...rest, icon };
+  const uri = Image.resolveAssetSource(icon)?.uri;
+  return uri ? { ...rest, icon: uri } : rest;
+}
 
 /**
  * Floating bubble over other apps (Android only). Tapping it brings the app to the foreground.
@@ -25,7 +37,7 @@ export const FloatingBubble = {
    * (by default, only while the app is in the background). Calling it again applies new options.
    * @returns false if not available or the permission is missing.
    */
-  enable: (options: BubbleOptions = {}): boolean => native?.enable(options) ?? false,
+  enable: (options: BubbleOptions = {}): boolean => native?.enable(toNative(options)) ?? false,
 
   /** Turns the bubble off and removes it from the screen. */
   disable: (): void => native?.disable(),
@@ -37,7 +49,8 @@ export const FloatingBubble = {
    * Keeps the app alive in the background (foreground service) without the bubble or its
    * permission. Call it while the app is on screen. Uses `notificationTitle` / `notificationText`.
    */
-  startKeepAlive: (options: BubbleOptions = {}): void => native?.startKeepAlive?.(options),
+  startKeepAlive: (options: BubbleOptions = {}): void =>
+    native?.startKeepAlive?.(toNative(options)),
 
   /** Stops keeping the app alive. */
   stopKeepAlive: (): void => native?.stopKeepAlive?.(),
