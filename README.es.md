@@ -4,6 +4,7 @@
 
 Una burbuja flotante tipo "chat head" para **Android** que se dibuja sobre otras apps y vuelve a traer tu app de Expo / React Native al frente con un toque.
 
+[![CI](https://github.com/VMichael1999/expo-floating-bubble-overlay/actions/workflows/ci.yml/badge.svg)](https://github.com/VMichael1999/expo-floating-bubble-overlay/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platform: Android](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 ![Expo Modules API](https://img.shields.io/badge/Expo%20Modules-Kotlin-000020?logo=expo)
