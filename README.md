@@ -8,8 +8,18 @@ A floating "chat head" bubble for **Android** that draws over other apps and bri
 
 **You decide everything:** whether the bubble is on or off, when it shows (background, foreground or both), which image it displays, its size and behavior. It is not tied to any kind of app.
 
+## Screenshots
+
+Taken from the [example app](#example-app) on a Pixel 10 Pro XL emulator (Android 17).
+
+| Settings | In the background | Drag to dismiss | Custom icon | `showWhen: 'always'` |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/01-settings.webp" width="160" alt="Example app settings with the permissions granted"/> | <img src="docs/screenshots/02-background.webp" width="160" alt="Bubble with the app icon over the home screen"/> | <img src="docs/screenshots/03-drag-to-dismiss.webp" width="160" alt="Bubble being dragged towards the X at the bottom"/> | <img src="docs/screenshots/04-custom-icon.webp" width="160" alt="Bubble with a custom image over the home screen"/> | <img src="docs/screenshots/05-always.webp" width="160" alt="Bubble shown over the app itself"/> |
+| Permissions and options | Your app icon by default, snapped to the edge | The ✕ appears while dragging | Any image via `icon` | Also inside your app |
+
 ## Contents
 
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Use cases](#use-cases)
 - [Requirements](#requirements)
@@ -425,7 +435,7 @@ Because every call is safe everywhere, you can use the same code on all platform
 
 ## Example app
 
-The [`example`](example) folder contains an app with a "Show floating bubble" switch, a `showWhen` selector, a custom icon switch and a "Hide on tap" switch.
+The [`example`](example) folder contains an app that requests the permissions ("Display over other apps" and, on Android 13+, notifications) and lets you try every option: a "Show floating bubble" switch, a custom icon switch, a "Hide on tap" switch and a `showWhen` selector. The [screenshots](#screenshots) were taken with it.
 
 ```bash
 cd example
