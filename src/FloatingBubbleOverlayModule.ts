@@ -1,9 +1,22 @@
-import { NativeModule, requireNativeModule } from 'expo';
+import { NativeModule, requireOptionalNativeModule } from 'expo';
+import { Platform } from 'react-native';
 
-import { FloatingBubbleOverlayModuleEvents } from './FloatingBubbleOverlay.types';
+import type { Eventos, OpcionesBurbuja } from './FloatingBubbleOverlay.types';
 
-declare class FloatingBubbleOverlayModule extends NativeModule<FloatingBubbleOverlayModuleEvents> {
-  hello(): string;
+declare class FloatingBubbleOverlayModule extends NativeModule<Eventos> {
+  tienePermiso(): boolean;
+  abrirAjustesPermiso(): void;
+  mostrar(opciones: OpcionesBurbuja): boolean;
+  mantenerActiva(opciones: OpcionesBurbuja): void;
+  soltarActiva(): void;
+  ocultar(): void;
+  abrirApp(): boolean;
+  programarApertura(segundos: number): void;
+  cancelarApertura(): void;
+  estaVisible(): boolean;
 }
 
-export default requireNativeModule<FloatingBubbleOverlayModule>('FloatingBubbleOverlay');
+// Solo existe en Android con un development build; en iOS, web y Expo Go es null.
+export default Platform.OS === 'android'
+  ? requireOptionalNativeModule<FloatingBubbleOverlayModule>('FloatingBubbleOverlay')
+  : null;
