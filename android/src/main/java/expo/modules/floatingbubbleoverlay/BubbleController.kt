@@ -45,6 +45,8 @@ object BubbleController {
   private var options = BubbleOptions()
   private var lifecycleApp: Application? = null
   private var startedActivities = 0
+  /** Set by a tap with [BubbleOptions.hideOnPress]; cleared when the app goes to the background. */
+  private var hiddenUntilBackground = false
 
   private val appInForeground get() = startedActivities > 0
 
@@ -78,6 +80,8 @@ object BubbleController {
     mainHandler.post {
       if (!isEnabled) return@post
       watchLifecycle(app)
+      // An explicit enable shows the bubble again even if a tap had hidden it
+      hiddenUntilBackground = false
       if (options != this.options) {
         // Recreate the bubble with the new options
         removeView(app)
@@ -97,7 +101,7 @@ object BubbleController {
 
   /** Shows or hides the bubble for the current app state. */
   private fun update(app: Context) {
-    val shouldShow = isEnabled && when (options.showWhen) {
+    val shouldShow = isEnabled && !hiddenUntilBackground && when (options.showWhen) {
       ShowWhen.BACKGROUND -> !appInForeground
       ShowWhen.FOREGROUND -> appInForeground
       ShowWhen.ALWAYS -> true
@@ -152,6 +156,8 @@ object BubbleController {
 
       override fun onActivityStopped(activity: Activity) {
         startedActivities = (startedActivities - 1).coerceAtLeast(0)
+        // Back in the background: a bubble hidden by a tap comes back
+        if (!appInForeground) hiddenUntilBackground = false
         update(app)
       }
 
@@ -192,9 +198,18 @@ object BubbleController {
     mainHandler.post { if (!isVisible) KeepAliveService.stop(app) }
   }
 
-  /** Tapping the bubble brings the app back if it is in the background; the bubble stays enabled. */
+  /**
+   * Tapping the bubble brings the app back if it is in the background. With
+   * [BubbleOptions.hideOnPress] (default) the bubble also hides until the app next goes to the
+   * background. Either way it stays enabled.
+   */
   private fun pressed(app: Context) {
     if (!appInForeground) bringAppToForeground(app)
+    if (options.hideOnPress) {
+      hiddenUntilBackground = true
+      // After the touch event finishes: the view must not remove its own window while handling it
+      mainHandler.post { update(app) }
+    }
     listener?.onPress()
   }
 
