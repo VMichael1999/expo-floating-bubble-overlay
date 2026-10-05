@@ -15,4 +15,13 @@ android {
   lintOptions {
     abortOnError false
   }
+  testOptions {
+    unitTests.includeAndroidResources = true
+  }
+}
+
+dependencies {
+  // Solo para tests unitarios del modulo (no entra en la app)
+  testImplementation 'junit:junit:4.13.2'
+  testImplementation 'org.robolectric:robolectric:4.14.1'
 }
