@@ -74,10 +74,11 @@ export const FloatingBubble = {
   /** Cancels any pending scheduled bring-to-foreground. */
   cancelScheduledBringAppToForeground: (): void => native?.cancelScheduledBringAppToForeground?.(),
 
+  /** The bubble was tapped (see `onPress`). Call `remove()` on the result to unsubscribe. */
   addPressListener: (listener: () => void) =>
     native?.addListener('onPress', listener) ?? noSubscription,
 
-  /** The user dropped the bubble on the X: it is now disabled until `enable()` is called again. */
+  /** The user dropped the bubble on the X (see `onDismiss`). Call `remove()` on the result to unsubscribe. */
   addDismissListener: (listener: () => void) =>
     native?.addListener('onDismiss', listener) ?? noSubscription,
 };

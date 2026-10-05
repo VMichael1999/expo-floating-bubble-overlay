@@ -46,8 +46,12 @@ export interface BubbleOptions {
 export type NativeBubbleOptions = Omit<BubbleOptions, 'icon'> & { icon?: string };
 
 export type FloatingBubbleEvents = {
-  /** The bubble was tapped: the app is already coming to the foreground and the bubble is hidden. */
+  /**
+   * The bubble was tapped. If the app was in the background it is already coming to the
+   * foreground. With `hideOnPress` (default) the bubble hides until the app next goes to the
+   * background. Either way it stays enabled.
+   */
   onPress: () => void;
-  /** The user dragged the bubble onto the X. */
+  /** The user dropped the bubble on the X: it is now disabled until `enable()` is called again. */
   onDismiss: () => void;
 };

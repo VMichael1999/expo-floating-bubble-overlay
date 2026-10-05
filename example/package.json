@@ -4,6 +4,7 @@
   "main": "index.ts",
   "dependencies": {
     "expo": "~57.0.26",
+    "expo-constants": "~57.0.20",
     "react": "19.2.3",
     "react-native": "0.86.3"
   },
