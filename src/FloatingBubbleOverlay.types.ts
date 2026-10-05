@@ -1,3 +1,11 @@
+/**
+ * When the enabled bubble is on screen:
+ * - `'background'`: only while the app is in the background (default)
+ * - `'foreground'`: only while the app is in the foreground
+ * - `'always'`: in both states
+ */
+export type ShowWhen = 'background' | 'foreground' | 'always';
+
 /** Bubble options (all optional). Sizes and positions in dp. */
 export interface BubbleOptions {
   /** Diameter, from 40 to 96. Defaults to 60. */
@@ -16,6 +24,8 @@ export interface BubbleOptions {
   /** Notification of the foreground service that keeps the app alive while the bubble shows. */
   notificationTitle?: string;
   notificationText?: string;
+  /** When the bubble is on screen while enabled. Defaults to `'background'`. */
+  showWhen?: ShowWhen;
 }
 
 export type FloatingBubbleEvents = {

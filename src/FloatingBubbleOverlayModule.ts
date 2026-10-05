@@ -6,13 +6,14 @@ import type { BubbleOptions, FloatingBubbleEvents } from './FloatingBubbleOverla
 declare class FloatingBubbleOverlayModule extends NativeModule<FloatingBubbleEvents> {
   hasOverlayPermission(): boolean;
   openOverlayPermissionSettings(): void;
-  show(options: BubbleOptions): boolean;
+  enable(options: BubbleOptions): boolean;
   startKeepAlive(options: BubbleOptions): void;
   stopKeepAlive(): void;
-  hide(): void;
+  disable(): void;
   bringAppToForeground(): boolean;
   scheduleBringAppToForeground(seconds: number): void;
   cancelScheduledBringAppToForeground(): void;
+  isEnabled(): boolean;
   isVisible(): boolean;
 }
 
