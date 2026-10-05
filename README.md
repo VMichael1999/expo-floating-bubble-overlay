@@ -1,5 +1,7 @@
 # expo-floating-bubble-overlay
 
+🌐 **English** | [Español](README.es.md)
+
 A floating "chat head" bubble for **Android** that draws over other apps and brings your Expo / React Native app back to the foreground with one tap.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -10,12 +12,21 @@ A floating "chat head" bubble for **Android** that draws over other apps and bri
 
 ## Screenshots
 
-Taken from the [example app](#example-app) on a Pixel 10 Pro XL emulator (Android 17).
+Taken from the [example app](#example-app) on a Pixel 10 Pro XL emulator (Android 17). From left to right:
 
-| Settings | In the background | Drag to dismiss | Custom icon | `showWhen: 'always'` |
-| :---: | :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/01-settings.webp" width="160" alt="Example app settings with the permissions granted"/> | <img src="docs/screenshots/02-background.webp" width="160" alt="Bubble with the app icon over the home screen"/> | <img src="docs/screenshots/03-drag-to-dismiss.webp" width="160" alt="Bubble being dragged towards the X at the bottom"/> | <img src="docs/screenshots/04-custom-icon.webp" width="160" alt="Bubble with a custom image over the home screen"/> | <img src="docs/screenshots/05-always.webp" width="160" alt="Bubble shown over the app itself"/> |
-| Permissions and options | Your app icon by default, snapped to the edge | The ✕ appears while dragging | Any image via `icon` | Also inside your app |
+<p align="center">
+  <img src="docs/screenshots/01-settings.webp" width="150" alt="Example app settings with the permissions granted"/>
+  <img src="docs/screenshots/02-background.webp" width="150" alt="Bubble with the app icon over the home screen"/>
+  <img src="docs/screenshots/03-drag-to-dismiss.webp" width="150" alt="Bubble being dragged towards the X at the bottom"/>
+  <img src="docs/screenshots/04-custom-icon.webp" width="150" alt="Bubble with a custom image over the home screen"/>
+  <img src="docs/screenshots/05-always.webp" width="150" alt="Bubble shown over the app itself"/>
+</p>
+
+1. **Settings**: permissions and options.
+2. **In the background**: your app icon by default, snapped to the edge.
+3. **Drag to dismiss**: the ✕ appears while dragging.
+4. **Custom icon**: any image via `icon`.
+5. **`showWhen: 'always'`**: also inside your app.
 
 ## Contents
 
