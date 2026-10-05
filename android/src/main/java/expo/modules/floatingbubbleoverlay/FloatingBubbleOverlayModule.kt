@@ -13,12 +13,12 @@ class FloatingBubbleOverlayModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("FloatingBubbleOverlay")
 
-    Events("onTocar", "onCerrar")
+    Events("onPress", "onDismiss")
 
     OnCreate {
       BubbleController.listener = object : BubbleController.Listener {
-        override fun onPress() = sendEvent("onTocar", emptyMap<String, Any?>())
-        override fun onDismiss() = sendEvent("onCerrar", emptyMap<String, Any?>())
+        override fun onPress() = sendEvent("onPress", emptyMap<String, Any?>())
+        override fun onDismiss() = sendEvent("onDismiss", emptyMap<String, Any?>())
       }
     }
 
@@ -26,43 +26,43 @@ class FloatingBubbleOverlayModule : Module() {
       BubbleController.listener = null
     }
 
-    Function("tienePermiso") {
+    Function("hasOverlayPermission") {
       BubbleController.hasOverlayPermission(context)
     }
 
-    Function("abrirAjustesPermiso") {
+    Function("openOverlayPermissionSettings") {
       BubbleController.openOverlayPermissionSettings(context)
     }
 
-    Function("mostrar") { options: Map<String, Any?> ->
+    Function("show") { options: Map<String, Any?> ->
       BubbleController.show(context, BubbleOptions.fromMap(options))
     }
 
-    Function("mantenerActiva") { options: Map<String, Any?> ->
+    Function("startKeepAlive") { options: Map<String, Any?> ->
       BubbleController.startKeepAlive(context, BubbleOptions.fromMap(options))
     }
 
-    Function("soltarActiva") {
+    Function("stopKeepAlive") {
       BubbleController.stopKeepAlive(context)
     }
 
-    Function("ocultar") {
+    Function("hide") {
       BubbleController.hide(context)
     }
 
-    Function("abrirApp") {
+    Function("bringAppToForeground") {
       BubbleController.bringAppToForeground(context)
     }
 
-    Function("programarApertura") { seconds: Int ->
+    Function("scheduleBringAppToForeground") { seconds: Int ->
       BubbleController.scheduleBringAppToForeground(context, seconds)
     }
 
-    Function("cancelarApertura") {
+    Function("cancelScheduledBringAppToForeground") {
       BubbleController.cancelScheduledBringAppToForeground()
     }
 
-    Function("estaVisible") {
+    Function("isVisible") {
       BubbleController.isVisible
     }
   }

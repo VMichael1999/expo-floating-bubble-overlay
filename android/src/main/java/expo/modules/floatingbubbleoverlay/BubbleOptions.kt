@@ -23,15 +23,15 @@ data class BubbleOptions(
     fun fromMap(m: Map<String, Any?>): BubbleOptions {
       fun int(k: String) = (m[k] as? Number)?.toInt()
       return BubbleOptions(
-        sizeDp = int("tamano")?.coerceIn(40, 96) ?: 60,
-        opacity = (m["opacidad"] as? Number)?.toFloat()?.coerceIn(0.2f, 1f) ?: 1f,
-        icon = (m["icono"] as? String)?.takeIf { it.isNotBlank() },
-        dismissDistanceDp = int("distanciaCerrar")?.coerceAtLeast(24) ?: 96,
-        snapToEdge = m["pegarAlBorde"] as? Boolean ?: true,
+        sizeDp = int("size")?.coerceIn(40, 96) ?: 60,
+        opacity = (m["opacity"] as? Number)?.toFloat()?.coerceIn(0.2f, 1f) ?: 1f,
+        icon = (m["icon"] as? String)?.takeIf { it.isNotBlank() },
+        dismissDistanceDp = int("dismissDistance")?.coerceAtLeast(24) ?: 96,
+        snapToEdge = m["snapToEdge"] as? Boolean ?: true,
         initialXDp = int("x"),
         initialYDp = int("y"),
-        notificationTitle = m["tituloNotificacion"] as? String,
-        notificationText = m["textoNotificacion"] as? String,
+        notificationTitle = m["notificationTitle"] as? String,
+        notificationText = m["notificationText"] as? String,
       )
     }
   }

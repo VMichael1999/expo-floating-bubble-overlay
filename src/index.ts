@@ -1,56 +1,59 @@
-import type { OpcionesBurbuja } from './FloatingBubbleOverlay.types';
-import nativo from './FloatingBubbleOverlayModule';
+import type { BubbleOptions } from './FloatingBubbleOverlay.types';
+import native from './FloatingBubbleOverlayModule';
 
 export * from './FloatingBubbleOverlay.types';
 
-const sinSuscripcion = { remove() {} };
+const noSubscription = { remove() {} };
 
 /**
- * Burbuja flotante sobre otras apps (solo Android). Tocarla trae la app al frente.
- * Donde no está disponible, todo es un no-op seguro.
+ * Floating bubble over other apps (Android only). Tapping it brings the app to the foreground.
+ * Where it is not available, every call is a safe no-op.
  */
-export const BurbujaFlotante = {
-  /** false en iOS, web y Expo Go. */
-  disponible: nativo != null,
+export const FloatingBubble = {
+  /** false on iOS, web and Expo Go. */
+  isAvailable: native != null,
 
-  /** Permiso "Mostrar sobre otras apps". */
-  tienePermiso: (): boolean => nativo?.tienePermiso() ?? false,
+  /** "Display over other apps" permission. */
+  hasOverlayPermission: (): boolean => native?.hasOverlayPermission() ?? false,
 
-  /** Abre la pantalla del sistema para conceder el permiso. */
-  abrirAjustesPermiso: (): void => nativo?.abrirAjustesPermiso(),
+  /** Opens the system screen to grant the permission. */
+  openOverlayPermissionSettings: (): void => native?.openOverlayPermissionSettings(),
 
-  /** @returns false si no está disponible o falta el permiso. */
-  mostrar: (opciones: OpcionesBurbuja = {}): boolean => nativo?.mostrar(opciones) ?? false,
+  /** @returns false if not available or the permission is missing. */
+  show: (options: BubbleOptions = {}): boolean => native?.show(options) ?? false,
 
-  ocultar: (): void => nativo?.ocultar(),
-
-  /**
-   * Mantiene la app viva en segundo plano (servicio en primer plano) sin burbuja ni permiso.
-   * Llamar con la app en pantalla. Usa `tituloNotificacion` / `textoNotificacion`.
-   */
-  mantenerActiva: (opciones: OpcionesBurbuja = {}): void => nativo?.mantenerActiva?.(opciones),
-
-  /** Deja de mantenerla viva. */
-  soltarActiva: (): void => nativo?.soltarActiva?.(),
-
-  estaVisible: (): boolean => nativo?.estaVisible() ?? false,
+  hide: (): void => native?.hide(),
 
   /**
-   * Trae la app al frente desde segundo plano.
-   * Requiere el mismo permiso que la burbuja. @returns false si no se pudo.
+   * Keeps the app alive in the background (foreground service) without the bubble or its
+   * permission. Call it while the app is on screen. Uses `notificationTitle` / `notificationText`.
    */
-  abrirApp: (): boolean => nativo?.abrirApp() ?? false,
+  startKeepAlive: (options: BubbleOptions = {}): void => native?.startKeepAlive?.(options),
+
+  /** Stops keeping the app alive. */
+  stopKeepAlive: (): void => native?.stopKeepAlive?.(),
+
+  isVisible: (): boolean => native?.isVisible() ?? false,
 
   /**
-   * Programa la apertura automática de la app tras N segundos usando un temporizador nativo.
-   * Funciona aunque React Native esté pausado en segundo plano.
+   * Brings the app to the foreground from the background.
+   * Needs the same permission as the bubble. @returns false if it could not.
    */
-  programarApertura: (segundos: number): void => nativo?.programarApertura?.(segundos),
+  bringAppToForeground: (): boolean => native?.bringAppToForeground() ?? false,
 
-  /** Cancela cualquier apertura diferida programada previamente. */
-  cancelarApertura: (): void => nativo?.cancelarApertura?.(),
+  /**
+   * Brings the app to the foreground after N seconds using a native timer.
+   * Works even while React Native is paused in the background.
+   */
+  scheduleBringAppToForeground: (seconds: number): void =>
+    native?.scheduleBringAppToForeground?.(seconds),
 
-  alTocar: (cb: () => void) => nativo?.addListener('onTocar', cb) ?? sinSuscripcion,
+  /** Cancels any pending scheduled bring-to-foreground. */
+  cancelScheduledBringAppToForeground: (): void => native?.cancelScheduledBringAppToForeground?.(),
 
-  alCerrar: (cb: () => void) => nativo?.addListener('onCerrar', cb) ?? sinSuscripcion,
+  addPressListener: (listener: () => void) =>
+    native?.addListener('onPress', listener) ?? noSubscription,
+
+  addDismissListener: (listener: () => void) =>
+    native?.addListener('onDismiss', listener) ?? noSubscription,
 };
