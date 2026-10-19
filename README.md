@@ -1,11 +1,11 @@
 # expo-floating-bubble-overlay
 
-🌐 **English** | [Español](README.es.md)
+🌐 **English** | [Español](https://github.com/VMichael1999/expo-floating-bubble-overlay/blob/main/README.es.md)
 
 A floating "chat head" bubble for **Android** that draws over other apps and brings your Expo / React Native app back to the foreground with one tap.
 
 [![CI](https://github.com/VMichael1999/expo-floating-bubble-overlay/actions/workflows/ci.yml/badge.svg)](https://github.com/VMichael1999/expo-floating-bubble-overlay/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/VMichael1999/expo-floating-bubble-overlay/blob/main/LICENSE)
 ![Platform: Android](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 ![Expo Modules API](https://img.shields.io/badge/Expo%20Modules-Kotlin-000020?logo=expo)
 
@@ -16,11 +16,11 @@ A floating "chat head" bubble for **Android** that draws over other apps and bri
 Taken from the [example app](#example-app) on a Pixel 10 Pro XL emulator (Android 17). From left to right:
 
 <p align="center">
-  <img src="docs/screenshots/01-settings.webp" width="150" alt="Example app settings with the permissions granted"/>
-  <img src="docs/screenshots/02-background.webp" width="150" alt="Bubble with the app icon over the home screen"/>
-  <img src="docs/screenshots/03-drag-to-dismiss.webp" width="150" alt="Bubble being dragged towards the X at the bottom"/>
-  <img src="docs/screenshots/04-custom-icon.webp" width="150" alt="Bubble with a custom image over the home screen"/>
-  <img src="docs/screenshots/05-always.webp" width="150" alt="Bubble shown over the app itself"/>
+  <img src="https://raw.githubusercontent.com/VMichael1999/expo-floating-bubble-overlay/main/docs/screenshots/01-settings.webp" width="150" alt="Example app settings with the permissions granted"/>
+  <img src="https://raw.githubusercontent.com/VMichael1999/expo-floating-bubble-overlay/main/docs/screenshots/02-background.webp" width="150" alt="Bubble with the app icon over the home screen"/>
+  <img src="https://raw.githubusercontent.com/VMichael1999/expo-floating-bubble-overlay/main/docs/screenshots/03-drag-to-dismiss.webp" width="150" alt="Bubble being dragged towards the X at the bottom"/>
+  <img src="https://raw.githubusercontent.com/VMichael1999/expo-floating-bubble-overlay/main/docs/screenshots/04-custom-icon.webp" width="150" alt="Bubble with a custom image over the home screen"/>
+  <img src="https://raw.githubusercontent.com/VMichael1999/expo-floating-bubble-overlay/main/docs/screenshots/05-always.webp" width="150" alt="Bubble shown over the app itself"/>
 </p>
 
 1. **Settings**: permissions and options.
@@ -474,4 +474,4 @@ cd android && ./gradlew :expo-floating-bubble-overlay:testDebugUnitTest
 
 ## License
 
-[MIT](LICENSE) © Michael Valdiviezo
+[MIT](https://github.com/VMichael1999/expo-floating-bubble-overlay/blob/main/LICENSE) © Michael Valdiviezo
