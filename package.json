@@ -1,6 +1,6 @@
 {
   "name": "expo-floating-bubble-overlay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Floating chat-head bubble for Android that draws over other apps and brings your Expo app back to the foreground.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
